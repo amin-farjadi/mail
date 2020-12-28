@@ -31,37 +31,50 @@ function load_mailbox(mailbox) {
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
-  // Creating a table
-  const tbl = document.createElement("table");
-  document.querySelector('#emails-view').append(tbl);
-  const table = document.querySelector("table");
 
-  function create_header(dict) {
-    let header = table.createTHead().insertRow();
-    for (let key of Object.keys(dict) ) {
-      let th = document.createElement("th");
-      let txt = document.createTextNode(key);
-      th.appendChild(txt);
-      header.appendChild(th);
-    }
+  // Creating email list
+  function mail_list_create(){
+    const mail_list = document.createElement('div');
+    mail_list.classList.add('list-group');
+    document.querySelector('#emails-view').append(mail_list);
+    return mail_list
   }
 
-  function create_row(dict) {
-    let row = table.insertRow();
-    for (let key of Object.keys(dict) ) {
-      let cell = row.insertCell();
-      let txt = document.createTextNode(dict[key]);
-      cell.appendChild(txt);
-    }
-  }
+  function mail_add(mail_list, email){
 
+    const element = document.createElement('a');
+    element.classList.add('list-group-item', 'list-group-item-action');
+    element.href = "#";
+
+    const div = document.createElement('div');
+    div.classList.add('d-flex', 'w-100', 'justify-content-between');
+
+    const person = document.createElement('h6');
+    person.classList.add('mb-1');
+    person.innerHTML = email.sender;
+
+    const subject = document.createElement('h6');
+    subject.classList.add('mb-1');
+    subject.innerHTML = `<b> ${email.subject} </b>`;
+
+    const timestamp = document.createElement('small');
+    timestamp.classList.add('text-muted');
+    timestamp.innerHTML = email.timestamp;
+
+    div.append(person, subject, timestamp);
+    element.append(div);
+    mail_list.append(element);
+
+  }
+  
   // Show the contents of mailbox
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
     console.log(emails);
-    create_header(emails[0]);
-    emails.forEach(email => create_row(email));
+    //create_header(emails[0]);
+    mail_list = mail_list_create();
+    emails.forEach(email => mail_add(mail_list, email));
   });
-  // document.querySelector('#emails-view').innerHTML += '<h4> Hi </h4>';
+  
 }
