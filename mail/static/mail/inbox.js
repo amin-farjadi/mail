@@ -34,6 +34,11 @@ function load_mailbox(mailbox) {
 
   // Creating email list
   function mail_list_create(){
+    // delete an already existing mail list
+    if (document.querySelector('.list-group') !== null) {
+      document.querySelector('.list-group').remove();
+    }
+    // create a list group
     const mail_list = document.createElement('div');
     mail_list.classList.add('list-group');
     document.querySelector('#emails-view').append(mail_list);
@@ -44,14 +49,45 @@ function load_mailbox(mailbox) {
 
     const element = document.createElement('a');
     element.classList.add('list-group-item', 'list-group-item-action');
-    element.href = "#";
+    element.href = String.raw`/emails/${email.id}`;
+    // Marking email as read
+    if (!email.read) {
+      element.onclick = function() {
+        fetch(`/emails/${email.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+              read: true
+          })
+        })
+        .then(console.log('marked as read'))
+        .then(document.location.reload());
+      };
+    }
+
+
+
+    if (email.read) {element.style = 'background-color:lightgrey;'}
 
     const div = document.createElement('div');
     div.classList.add('d-flex', 'w-100', 'justify-content-between');
 
     const person = document.createElement('h6');
     person.classList.add('mb-1');
-    person.innerHTML = email.sender;
+    if (mailbox === 'sent') {
+
+      if (email.recipients.length > 1){
+        const person_first = email.recipients[0];
+        person.innerHTML = `${person_first}, ...`;
+      }
+
+      else {
+        person.innerHTML = email.recipients;
+      }
+
+    }
+    else {
+      person.innerHTML = email.sender;
+    }
 
     const subject = document.createElement('h6');
     subject.classList.add('mb-1');
@@ -76,5 +112,12 @@ function load_mailbox(mailbox) {
     mail_list = mail_list_create();
     emails.forEach(email => mail_add(mail_list, email));
   });
-  
+
+  // document.querySelectorAll('.list-group-item').forEach(email => {
+  //   // marking email as read
+  //   email.onclick = function() {mark_read(email)};
+  // })
+
+
+
 }
