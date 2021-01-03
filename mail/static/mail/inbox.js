@@ -8,18 +8,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // By default, load the inbox
   load_mailbox('inbox');
+
 });
 
 function compose_email() {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
+
+  // Form submission
+  const button = document.querySelector('#button');
+  button.onclick = () => {
+    // obtain values
+    const recipients = document.querySelector('#compose-recipients').innerText;
+    const subject = document.querySelector('#compose-subject').innerHTML;
+    const body = document.querySelector('#compose-body').innerHTML;
+    // Post values
+    fetch('/emails', {
+      method: 'POST',
+      body: JSON.stringify({
+          recipients: recipients,
+          subject: subject,
+          body: body
+      })
+    })
+    .then(response => response.json())
+    .then(result => {
+        // Print result
+        alert(result);
+    })
+
+    .catch(error => alert(error));
+  
+  };
+  
+
+
+
 }
 
 function load_mailbox(mailbox) {
@@ -27,6 +59,7 @@ function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -49,22 +82,12 @@ function load_mailbox(mailbox) {
 
     const element = document.createElement('a');
     element.classList.add('list-group-item', 'list-group-item-action');
-    element.href = String.raw`/emails/${email.id}`;
+    //element.href = String.raw`/emails/${email.id}`;
     // Marking email as read
-    if (!email.read) {
-      element.onclick = function() {
-        fetch(`/emails/${email.id}`, {
-          method: 'PUT',
-          body: JSON.stringify({
-              read: true
-          })
-        })
-        .then(console.log('marked as read'))
-        .then(document.location.reload());
-      };
+    element.onclick = () => {
+      mark_read(email);
+      view_email(email.id);
     }
-
-
 
     if (email.read) {element.style = 'background-color:lightgrey;'}
 
@@ -117,7 +140,73 @@ function load_mailbox(mailbox) {
   //   // marking email as read
   //   email.onclick = function() {mark_read(email)};
   // })
-
-
-
 }
+
+
+function mark_read(email) {
+
+  if (!email.read) {
+    fetch(`/emails/${email.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+          read: true
+      })
+    });
+  }
+
+  else {
+    // pass
+  }
+}
+
+function mark_archive(email) {
+
+  if (! email.archived) {
+    fetch(`/emails/${email.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+          archived: true
+      })
+    });
+  }
+
+  else {
+    // pass
+  }
+}
+
+function view_email(email_id) {
+
+  // Show the mailbox and hide other views
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'block';
+
+  fetch(`/emails/${email_id}`)
+  .then(response => response.json())
+  .then(email => {
+    const element = (
+      `<div class="container">
+  
+        <div class="row mb-2">
+          <div class="col-md-8">${email.subject}</div>
+          <div class="col-md-4">${email.timestamp}</div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">${email.body}</div>
+        </div>
+
+
+        <div class="row">
+        </div>
+  
+      </div>`
+    );
+    document.querySelector('#email-view').innerHTML = element;
+  })
+
+  
+  
+}
+
