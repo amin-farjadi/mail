@@ -24,11 +24,10 @@ function compose_email() {
   document.querySelector('#compose-body').value = '';
 
   // Form submission
-  const button = document.querySelector('#button');
-  button.onclick = () => {
+  document.querySelector('#compose-form').onsubmit = () => {
     // obtain values
-    const recipients = document.querySelector('#compose-recipients').innerText;
-    const subject = document.querySelector('#compose-subject').innerHTML;
+    const recipients = document.querySelector('#compose-recipients').value;
+    const subject = document.querySelector('#compose-subject').value;
     const body = document.querySelector('#compose-body').innerHTML;
     // Post values
     fetch('/emails', {
@@ -41,11 +40,10 @@ function compose_email() {
     })
     .then(response => response.json())
     .then(result => {
-        // Print result
-        alert(result);
-    })
-
-    .catch(error => alert(error));
+      load_mailbox('sent');
+      // Print result
+      console.log(result);
+    });
   
   };
   
@@ -130,8 +128,6 @@ function load_mailbox(mailbox) {
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
-    console.log(emails);
-    //create_header(emails[0]);
     mail_list = mail_list_create();
     emails.forEach(email => mail_add(mail_list, email));
   });
