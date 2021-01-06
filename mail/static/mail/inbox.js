@@ -64,7 +64,7 @@ function load_mailbox(mailbox) {
   .then(response => response.json())
   .then(emails => {
     mail_list = mail_list_create();
-    emails.forEach(email => mail_add(mail_list, email));
+    emails.forEach(email => mail_add(mailbox, mail_list, email));
   });
 
 }
@@ -83,7 +83,7 @@ function mail_list_create(){
 }
 
 // Adding individual emails
-function mail_add(mail_list, email){
+function mail_add(mailbox, mail_list, email){
 
   const element = document.createElement('a');
   element.classList.add('list-group-item', 'list-group-item-action');
