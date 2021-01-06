@@ -69,6 +69,53 @@ function load_mailbox(mailbox) {
 
 }
 
+// View individual emails
+function view_email(email_id) {
+
+  // Show the mailbox and hide other views
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'block';
+
+  fetch(`/emails/${email_id}`)
+  .then(response => response.json())
+  .then(email => {
+    const buttons = (`
+      <div class="d-flex flex-row-reverse mb-3">
+        <button id="reply_button" type="button" class="btn btn-info col-md-3">Reply</button>
+        <button id="archive_button" type="button" class="btn btn-secondary col-md-2 mr-1">Archive</button>
+      </div>
+    `);
+
+    const email_element = (
+      `<div class="container">
+  
+        <div class="row mb-2">
+          <div class="col-md-8">${email.subject}</div>
+          <div class="col-md-4">${email.timestamp}</div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">${email.body}</div>
+        </div>
+
+
+        <div class="row">
+        </div>
+  
+      </div>`
+    );
+    document.querySelector('#email-view').innerHTML = buttons
+    document.querySelector('#email-view').innerHTML += email_element;
+
+    document.querySelector('#reply_button').onclick = () => {
+      reply(email);
+    };
+  })
+
+  
+}
+
 // Creating email list
 function mail_list_create(){
   // delete an already existing mail list
@@ -148,7 +195,7 @@ function mark_read(email) {
   }
 }
 
-function mark_archive(email) {
+function archive(email) {
 
   if (! email.archived) {
     fetch(`/emails/${email.id}`, {
@@ -156,45 +203,43 @@ function mark_archive(email) {
       body: JSON.stringify({
           archived: true
       })
+    })
+    .then(response => {
+      if (response.ok) {
+        return 'Unarchive'
+      }
+      else {
+        // pass
+      }
     });
   }
 
   else {
-    // pass
+    fetch(`/emails/${email.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+          archived: false
+      })
+    })
+    .then(response => {
+      if (response.ok) {
+        return 'Archive'
+      }
+      else {
+        // pass
+      }
+    });
   }
 }
 
-function view_email(email_id) {
-
-  // Show the mailbox and hide other views
-  document.querySelector('#emails-view').style.display = 'none';
-  document.querySelector('#compose-view').style.display = 'none';
-  document.querySelector('#email-view').style.display = 'block';
-
-  fetch(`/emails/${email_id}`)
-  .then(response => response.json())
-  .then(email => {
-    const element = (
-      `<div class="container">
-  
-        <div class="row mb-2">
-          <div class="col-md-8">${email.subject}</div>
-          <div class="col-md-4">${email.timestamp}</div>
-        </div>
-
-        <div class="row">
-          <div class="col-12">${email.body}</div>
-        </div>
-
-
-        <div class="row">
-        </div>
-  
-      </div>`
-    );
-    document.querySelector('#email-view').innerHTML = element;
-  })
-  
+function reply(email) {
+  compose_email();
+  document.querySelector('#compose-subject').value = `Re: ${email.subject}`;
+  document.querySelector('#compose-recipients').value = `${email.recipients}`;
+  document.querySelector('#compose-body').value = `\n ----------------- \n On ${email.timestamp} ${email.sender} wrote: \n ${email.body}`;
+  // Bringing cursor on the body
+  document.querySelector('#compose-body').focus();
+  document.querySelector('#compose-body').setSelectionRange(0, 0); 
 }
 
 // Sending email
