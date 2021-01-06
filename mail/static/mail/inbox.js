@@ -24,31 +24,28 @@ function compose_email() {
   document.querySelector('#compose-body').value = '';
 
   // Form submission
-  document.querySelector('#compose-form').onsubmit = () => {
-    // obtain values
-    const recipients = document.querySelector('#compose-recipients').value;
-    const subject = document.querySelector('#compose-subject').value;
-    const body = document.querySelector('#compose-body').innerHTML;
+  document.querySelector('#compose-form').onsubmit = (e) => {
+    e.preventDefault();
     // Post values
-    fetch('/emails', {
-      method: 'POST',
-      body: JSON.stringify({
-          recipients: recipients,
-          subject: subject,
-          body: body
-      })
+    sendEmail({
+      recipients: document.querySelector('#compose-recipients').value,
+      subject: document.querySelector('#compose-subject').value,
+      body: document.querySelector('#compose-body').value,
     })
-    .then(response => response.json())
-    .then(result => {
+    .then(response => {
+      if (!response.ok){
+        throw new Error('Email not sent, please try again')
+      }
+
       load_mailbox('sent');
-      // Print result
-      console.log(result);
+    })
+    .catch(error => {
+      alert(error);
+      compose_email();
     });
+    
+  }
   
-  };
-  
-
-
 
 }
 
@@ -60,69 +57,7 @@ function load_mailbox(mailbox) {
   document.querySelector('#email-view').style.display = 'none';
 
   // Show the mailbox name
-  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
-
-
-  // Creating email list
-  function mail_list_create(){
-    // delete an already existing mail list
-    if (document.querySelector('.list-group') !== null) {
-      document.querySelector('.list-group').remove();
-    }
-    // create a list group
-    const mail_list = document.createElement('div');
-    mail_list.classList.add('list-group');
-    document.querySelector('#emails-view').append(mail_list);
-    return mail_list
-  }
-
-  function mail_add(mail_list, email){
-
-    const element = document.createElement('a');
-    element.classList.add('list-group-item', 'list-group-item-action');
-    //element.href = String.raw`/emails/${email.id}`;
-    // Marking email as read
-    element.onclick = () => {
-      mark_read(email);
-      view_email(email.id);
-    }
-
-    if (email.read) {element.style = 'background-color:lightgrey;'}
-
-    const div = document.createElement('div');
-    div.classList.add('d-flex', 'w-100', 'justify-content-between');
-
-    const person = document.createElement('h6');
-    person.classList.add('mb-1');
-    if (mailbox === 'sent') {
-
-      if (email.recipients.length > 1){
-        const person_first = email.recipients[0];
-        person.innerHTML = `${person_first}, ...`;
-      }
-
-      else {
-        person.innerHTML = email.recipients;
-      }
-
-    }
-    else {
-      person.innerHTML = email.sender;
-    }
-
-    const subject = document.createElement('h6');
-    subject.classList.add('mb-1');
-    subject.innerHTML = `<b> ${email.subject} </b>`;
-
-    const timestamp = document.createElement('small');
-    timestamp.classList.add('text-muted');
-    timestamp.innerHTML = email.timestamp;
-
-    div.append(person, subject, timestamp);
-    element.append(div);
-    mail_list.append(element);
-
-  }
+  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;  
   
   // Show the contents of mailbox
   fetch(`/emails/${mailbox}`)
@@ -132,12 +67,70 @@ function load_mailbox(mailbox) {
     emails.forEach(email => mail_add(mail_list, email));
   });
 
-  // document.querySelectorAll('.list-group-item').forEach(email => {
-  //   // marking email as read
-  //   email.onclick = function() {mark_read(email)};
-  // })
 }
 
+// Creating email list
+function mail_list_create(){
+  // delete an already existing mail list
+  if (document.querySelector('.list-group') !== null) {
+    document.querySelector('.list-group').remove();
+  }
+  // create a list group
+  const mail_list = document.createElement('div');
+  mail_list.classList.add('list-group');
+  document.querySelector('#emails-view').append(mail_list);
+  return mail_list
+}
+
+// Adding individual emails
+function mail_add(mail_list, email){
+
+  const element = document.createElement('a');
+  element.classList.add('list-group-item', 'list-group-item-action');
+  // Marking email as read
+  element.onclick = () => {
+    mark_read(email);
+    view_email(email.id);
+  }
+
+  if (email.read) {element.style = 'background-color:lightgrey;'}
+
+  // Modifying element style
+  const div = document.createElement('div');
+  div.classList.add('d-flex', 'w-100', 'justify-content-between');
+
+  const person = document.createElement('h6');
+  person.classList.add('mb-1');
+  if (mailbox === 'sent') {
+
+    if (email.recipients.length > 1){
+      const person_first = email.recipients[0];
+      person.innerHTML = `${person_first}, ...`;
+    }
+
+    else {
+      person.innerHTML = email.recipients;
+    }
+
+  }
+  else {
+    person.innerHTML = email.sender;
+  }
+
+  const subject = document.createElement('h6');
+  subject.classList.add('mb-1');
+  subject.innerHTML = `<b> ${email.subject} </b>`;
+
+  const timestamp = document.createElement('small');
+  timestamp.classList.add('text-muted');
+  timestamp.innerHTML = email.timestamp;
+
+  div.append(person, subject, timestamp);
+  element.append(div);
+
+  mail_list.append(element);
+
+}
 
 function mark_read(email) {
 
@@ -201,8 +194,16 @@ function view_email(email_id) {
     );
     document.querySelector('#email-view').innerHTML = element;
   })
+  
+}
 
-  
-  
+// Sending email
+async function sendEmail(data = {}) {
+  // Default options are marked with *
+  const response = await fetch('/emails', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+  return response
 }
 
