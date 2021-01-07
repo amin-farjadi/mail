@@ -3,37 +3,37 @@ document.addEventListener('DOMContentLoaded', function() {
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => {
     load_mailbox('inbox');
-    document.querySelector('#inbox').classList.add('active');
-    document.querySelector('#sent').classList.remove('active');
-    document.querySelector('#archived').classList.remove('active');
-    document.querySelector('#compose').classList.remove('active');
+    navbar_active('#inbox');
   });
   document.querySelector('#sent').addEventListener('click', () => {
     load_mailbox('sent');
-    document.querySelector('#inbox').classList.remove('active');
-    document.querySelector('#sent').classList.add('active');
-    document.querySelector('#archived').classList.remove('active');
-    document.querySelector('#compose').classList.remove('active');
+    navbar_active('#sent');
   });
   document.querySelector('#archived').addEventListener('click', () => {
     load_mailbox('archive');
-    document.querySelector('#inbox').classList.remove('active');
-    document.querySelector('#sent').classList.remove('active');
-    document.querySelector('#archived').classList.add('active');
-    document.querySelector('#compose').classList.remove('active');
+    navbar_active('#archived');
   });
   document.querySelector('#compose').addEventListener('click', () => {
     compose_email();
-    document.querySelector('#inbox').classList.remove('active');
-    document.querySelector('#sent').classList.remove('active');
-    document.querySelector('#archived').classList.remove('active');
-    document.querySelector('#compose').classList.add('active');
+    navbar_active('#compose');
   });
 
   // By default, load the inbox
   load_mailbox('inbox');
-  document.querySelector('#inbox').classList.add('active');
+  navbar_active('#inbox');
 });
+
+// Activating the nav bar tabs
+function navbar_active(mailbox){
+  const all = ['#inbox', '#sent', '#archived', '#compose'];
+  const idx = all.indexOf(mailbox);
+  all.splice(idx,1); // removing mailbox from all
+
+  all.forEach(item => {
+    document.querySelector(item).classList.remove('active');
+  });
+  document.querySelector(mailbox).classList.add('active');
+}
 
 function compose_email() {
 
@@ -69,8 +69,6 @@ function compose_email() {
     });
     
   }
-  
-
 }
 
 function load_mailbox(mailbox) {
@@ -82,7 +80,6 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
-  // document.querySelector('#navbar_brand').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   
   // Show the contents of mailbox
   fetch(`/emails/${mailbox}`)
@@ -95,7 +92,7 @@ function load_mailbox(mailbox) {
 }
 
 // View individual emails
-function view_email(email_id) {
+function view_email(email_id, mailbox) {
 
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'none';
@@ -140,29 +137,31 @@ function view_email(email_id) {
     };
 
     const archive_btn = document.querySelector('#archive_button');
-    // Setting initial value of archive button
-    if (email.archived) {
-      archive_btn.innerHTML = 'Unarchive';
+    if (mailbox === 'sent') {
+      archive_btn.style.display = 'none';
     }
     else {
-      archive_btn.innerHTML = 'Archive';
+      // Setting initial value of archive button
+      if (email.archived) {
+        archive_btn.innerHTML = 'Unarchive';
+      }
+      else {
+        archive_btn.innerHTML = 'Archive';
+      }
+    
+      archive_btn.onclick = () => {
+        mark_archive(email)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Not been able to archive')
+          }
+          load_mailbox('inbox');
+        })
+        .catch(error => alert(error));
+      };
     }
-  
-    archive_btn.onclick = () => {
-      mark_archive(email)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Not been able to archive')
-        }
-        load_mailbox('inbox');
-      })
-      .catch(error => alert(error));
-    };
 
-  })
-
-
-  
+  }) 
 }
 
 // Creating email list
@@ -186,7 +185,7 @@ function mail_add(mailbox, mail_list, email){
   // Marking email as read
   element.onclick = () => {
     mark_read(email);
-    view_email(email.id);
+    view_email(email.id, mailbox);
   }
 
   if (email.read) {element.style = 'background-color:lightgrey;'}
