@@ -83,7 +83,9 @@ function view_email(email_id) {
     const buttons = (`
       <div class="d-flex flex-row-reverse mb-3">
         <button id="reply_button" type="button" class="btn btn-info col-md-3">Reply</button>
-        <button id="archive_button" type="button" class="btn btn-secondary col-md-2 mr-1">Archive</button>
+        <button id="archive_button" type="button" class="btn btn-secondary col-md-2 mr-1">
+
+        </button>
       </div>
     `);
 
@@ -111,7 +113,29 @@ function view_email(email_id) {
     document.querySelector('#reply_button').onclick = () => {
       reply(email);
     };
+
+    const archive_btn = document.querySelector('#archive_button');
+    // Setting initial value of archive button
+    if (email.archived) {
+      archive_btn.innerHTML = 'Unarchive';
+    }
+    else {
+      archive_btn.innerHTML = 'Archive';
+    }
+  
+    archive_btn.onclick = () => {
+      mark_archive(email)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Not been able to archive')
+        }
+        load_mailbox('inbox');
+      })
+      .catch(error => alert(error));
+    };
+
   })
+
 
   
 }
@@ -195,41 +219,56 @@ function mark_read(email) {
   }
 }
 
-function archive(email) {
-
+async function mark_archive(email) {
   if (! email.archived) {
-    fetch(`/emails/${email.id}`, {
+    const response = await fetch(`/emails/${email.id}`, {
       method: 'PUT',
       body: JSON.stringify({
           archived: true
       })
-    })
-    .then(response => {
-      if (response.ok) {
-        return 'Unarchive'
-      }
-      else {
-        // pass
-      }
     });
+    return response
+    // .then(response => {
+    //   if (! response.ok) {
+    //     throw new Error('Not Put');
+    //   }
+    // })
+    // .catch(error => alert(`${error}`));
   }
 
   else {
-    fetch(`/emails/${email.id}`, {
+    const response = await fetch(`/emails/${email.id}`, {
       method: 'PUT',
       body: JSON.stringify({
           archived: false
       })
-    })
-    .then(response => {
-      if (response.ok) {
-        return 'Archive'
-      }
-      else {
-        // pass
-      }
     });
+    return response
+    // .then(response => {
+    //   if (!response.ok) {
+    //     throw new Error('Not Put');
+    //   }
+    // })
+    // .catch(error => alert(`${error}`));
   }
+
+}
+
+function archive(email, btn) {
+  mark_archive(email)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Not Put');
+    }
+    if (email.archived) {
+      btn.innerHTML = 'Unarchive';
+    }
+    else {
+      btn.innerHTML = 'Archive';
+    }
+  })
+  .catch(error => alert(`${error}`));
+
 }
 
 function reply(email) {
