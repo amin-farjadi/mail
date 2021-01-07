@@ -1,14 +1,38 @@
 document.addEventListener('DOMContentLoaded', function() {
 
   // Use buttons to toggle between views
-  document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
-  document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
-  document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#inbox').addEventListener('click', () => {
+    load_mailbox('inbox');
+    document.querySelector('#inbox').classList.add('active');
+    document.querySelector('#sent').classList.remove('active');
+    document.querySelector('#archived').classList.remove('active');
+    document.querySelector('#compose').classList.remove('active');
+  });
+  document.querySelector('#sent').addEventListener('click', () => {
+    load_mailbox('sent');
+    document.querySelector('#inbox').classList.remove('active');
+    document.querySelector('#sent').classList.add('active');
+    document.querySelector('#archived').classList.remove('active');
+    document.querySelector('#compose').classList.remove('active');
+  });
+  document.querySelector('#archived').addEventListener('click', () => {
+    load_mailbox('archive');
+    document.querySelector('#inbox').classList.remove('active');
+    document.querySelector('#sent').classList.remove('active');
+    document.querySelector('#archived').classList.add('active');
+    document.querySelector('#compose').classList.remove('active');
+  });
+  document.querySelector('#compose').addEventListener('click', () => {
+    compose_email();
+    document.querySelector('#inbox').classList.remove('active');
+    document.querySelector('#sent').classList.remove('active');
+    document.querySelector('#archived').classList.remove('active');
+    document.querySelector('#compose').classList.add('active');
+  });
 
   // By default, load the inbox
   load_mailbox('inbox');
-
+  document.querySelector('#inbox').classList.add('active');
 });
 
 function compose_email() {
@@ -57,7 +81,8 @@ function load_mailbox(mailbox) {
   document.querySelector('#email-view').style.display = 'none';
 
   // Show the mailbox name
-  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;  
+  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+  // document.querySelector('#navbar_brand').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   
   // Show the contents of mailbox
   fetch(`/emails/${mailbox}`)
