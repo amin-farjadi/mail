@@ -33,6 +33,8 @@ function navbar_active(mailbox){
     document.querySelector(item).classList.remove('active');
   });
   document.querySelector(mailbox).classList.add('active');
+
+  unread_counter();
 }
 
 function compose_email() {
@@ -315,3 +317,14 @@ async function sendEmail(data = {}) {
   return response
 }
 
+function unread_counter() {
+  var cnt = 0;
+  fetch('/emails/inbox')
+  .then(response => response.json())
+  .then(emails => {
+    emails.forEach(email =>{
+      if (!email.read){cnt+=1}
+    })
+    document.querySelector('#unread').innerHTML = cnt;
+  })
+}
