@@ -106,7 +106,7 @@ function view_email(email_id, mailbox) {
   .then(email => {
     const buttons = (`
       <div class="d-flex flex-row-reverse mb-3">
-        <button id="reply_button" type="button" class="btn btn-info col-md-3">Reply</button>
+        <button id="reply_button" type="button" class="btn btn-info col-md-2" style="background-color: MediumBlue; border-color: MediumBlue;">Reply</button>
         <button id="archive_button" type="button" class="btn btn-secondary col-md-2 mr-1">
 
         </button>
@@ -114,19 +114,32 @@ function view_email(email_id, mailbox) {
     `);
 
     const email_element = (
-      `<div class="container">
-  
-        <div class="row mb-2">
-          <div class="col-md-8">${email.subject}</div>
-          <div class="col-md-4">${email.timestamp}</div>
+      `<div class="container p-2">
+
+        <div class="d-flex flex-row mb-2">
+          <div class="">
+            <span style="font-weight: 500;">Subject: </span><b>${email.subject}</b>
+          </div>
         </div>
 
-        <div class="row">
-          <div class="col-12">${email.body}</div>
+        <div class="d-flex flex-row">
+          <div>
+            <span style="font-weight: 500;">From: </span>${email.sender}
+          </div>
         </div>
 
+        <div class="d-flex flex-row">
+          <div>
+            <span style="font-weight: 500;">Recipients: </span>${email.recipients.toString()}
+          </div>
+        </div>
 
-        <div class="row">
+        <div class="d-flex flex-row-reverse mb-2">
+          <div style="color: DarkBlue;">${email.timestamp}</div>
+        </div>
+
+        <div class="row" style="padding:10px; white-space: pre-line;">
+          <div class="col-12 box">${email.body}</div>
         </div>
   
       </div>`
@@ -185,9 +198,10 @@ function mail_add(mailbox, mail_list, email){
   const element = document.createElement('a');
   element.classList.add('list-group-item', 'list-group-item-action');
   // Marking email as read
-  element.onclick = () => {
-    mark_read(email);
+  element.onclick = async () => {
+    await mark_read(email);
     view_email(email.id, mailbox);
+    unread_counter(); 
   }
 
   if (email.read) {element.style = 'background-color:lightgrey;'}
@@ -229,10 +243,10 @@ function mail_add(mailbox, mail_list, email){
 
 }
 
-function mark_read(email) {
+async function mark_read(email) {
 
   if (!email.read) {
-    fetch(`/emails/${email.id}`, {
+    await fetch(`/emails/${email.id}`, {
       method: 'PUT',
       body: JSON.stringify({
           read: true
