@@ -23,8 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
   navbar_active('#inbox');
 });
 
-// Activating the nav bar tabs
+// Responsive nav bar implementation
 function navbar_active(mailbox){
+
   const all = ['#inbox', '#sent', '#archived', '#compose'];
   const idx = all.indexOf(mailbox);
   all.splice(idx,1); // removing mailbox from all
@@ -43,6 +44,9 @@ function compose_email() {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+
+  //Navbar response
+  navbar_active('#compose');
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -83,6 +87,9 @@ function load_mailbox(mailbox) {
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   
+  // Nav bar reponse
+  navbar_active('#'+mailbox);
+
   // Show the contents of mailbox
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
@@ -114,7 +121,7 @@ function view_email(email_id, mailbox) {
     `);
 
     const email_element = (
-      `<div class="container p-2">
+      `<div class="p-2">
 
         <div class="d-flex flex-row mb-2">
           <div class="">
@@ -181,6 +188,7 @@ function view_email(email_id, mailbox) {
 
 // Creating email list
 function mail_list_create(){
+
   // delete an already existing mail list
   if (document.querySelector('.list-group') !== null) {
     document.querySelector('.list-group').remove();
@@ -197,6 +205,7 @@ function mail_add(mailbox, mail_list, email){
 
   const element = document.createElement('a');
   element.classList.add('list-group-item', 'list-group-item-action');
+  element.style.cursor = "pointer";
   // Marking email as read
   element.onclick = async () => {
     await mark_read(email);
@@ -204,7 +213,7 @@ function mail_add(mailbox, mail_list, email){
     unread_counter(); 
   }
 
-  if (email.read) {element.style = 'background-color:lightgrey;'}
+  if (email.read) {element.style.backgroundColor = 'lightgrey'}
 
   // Modifying element style
   const div = document.createElement('div');
@@ -268,12 +277,6 @@ async function mark_archive(email) {
       })
     });
     return response
-    // .then(response => {
-    //   if (! response.ok) {
-    //     throw new Error('Not Put');
-    //   }
-    // })
-    // .catch(error => alert(`${error}`));
   }
 
   else {
@@ -284,12 +287,6 @@ async function mark_archive(email) {
       })
     });
     return response
-    // .then(response => {
-    //   if (!response.ok) {
-    //     throw new Error('Not Put');
-    //   }
-    // })
-    // .catch(error => alert(`${error}`));
   }
 
 }
@@ -323,15 +320,16 @@ function reply(email) {
 
 // Sending email
 async function sendEmail(data = {}) {
-  // Default options are marked with *
+
   const response = await fetch('/emails', {
     method: 'POST',
     body: JSON.stringify(data)
   });
-  return response
+  return response 
 }
 
 function unread_counter() {
+
   var cnt = 0;
   fetch('/emails/inbox')
   .then(response => response.json())
