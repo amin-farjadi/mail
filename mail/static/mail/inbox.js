@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     load_mailbox('sent');
     navbar_active('#sent');
   });
-  document.querySelector('#archived').addEventListener('click', () => {
+  document.querySelector('#archive').addEventListener('click', () => {
     load_mailbox('archive');
-    navbar_active('#archived');
+    navbar_active('#archive');
   });
   document.querySelector('#compose').addEventListener('click', () => {
     compose_email();
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Responsive nav bar implementation
 function navbar_active(mailbox){
 
-  const all = ['#inbox', '#sent', '#archived', '#compose'];
+  const all = ['#inbox', '#sent', '#archive', '#compose'];
   const idx = all.indexOf(mailbox);
   all.splice(idx,1); // removing mailbox from all
 
@@ -163,6 +163,7 @@ function view_email(email_id, mailbox) {
       archive_btn.style.display = 'none';
     }
     else {
+      archive_btn.style.display = 'block';
       // Setting initial value of archive button
       if (email.archived) {
         archive_btn.innerHTML = 'Unarchive';
@@ -288,23 +289,6 @@ async function mark_archive(email) {
     });
     return response
   }
-
-}
-
-function archive(email, btn) {
-  mark_archive(email)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Not Put');
-    }
-    if (email.archived) {
-      btn.innerHTML = 'Unarchive';
-    }
-    else {
-      btn.innerHTML = 'Archive';
-    }
-  })
-  .catch(error => alert(`${error}`));
 
 }
 
