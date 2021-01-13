@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     load_mailbox('sent');
     navbar_active('#sent');
   });
-  document.querySelector('#archived').addEventListener('click', () => {
+  document.querySelector('#archive').addEventListener('click', () => {
     load_mailbox('archive');
-    navbar_active('#archived');
+    navbar_active('#archive');
   });
   document.querySelector('#compose').addEventListener('click', () => {
     compose_email();
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Responsive nav bar implementation
 function navbar_active(mailbox){
 
-  const all = ['#inbox', '#sent', '#archived', '#compose'];
+  const all = ['#inbox', '#sent', '#archive', '#compose'];
   const idx = all.indexOf(mailbox);
   all.splice(idx,1); // removing mailbox from all
 
@@ -44,6 +44,9 @@ function compose_email() {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+
+  //Navbar response
+  navbar_active('#compose');
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -84,6 +87,9 @@ function load_mailbox(mailbox) {
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   
+  // Nav bar reponse
+  navbar_active('#'+mailbox);
+
   // Show the contents of mailbox
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
@@ -157,6 +163,7 @@ function view_email(email_id, mailbox) {
       archive_btn.style.display = 'none';
     }
     else {
+      archive_btn.style.display = 'block';
       // Setting initial value of archive button
       if (email.archived) {
         archive_btn.innerHTML = 'Unarchive';
@@ -182,7 +189,7 @@ function view_email(email_id, mailbox) {
 
 // Creating email list
 function mail_list_create(){
-  
+
   // delete an already existing mail list
   if (document.querySelector('.list-group') !== null) {
     document.querySelector('.list-group').remove();
@@ -199,6 +206,7 @@ function mail_add(mailbox, mail_list, email){
 
   const element = document.createElement('a');
   element.classList.add('list-group-item', 'list-group-item-action');
+  element.style.cursor = "pointer";
   // Marking email as read
   element.onclick = async () => {
     await mark_read(email);
@@ -206,7 +214,7 @@ function mail_add(mailbox, mail_list, email){
     unread_counter(); 
   }
 
-  if (email.read) {element.style = 'background-color:lightgrey;'}
+  if (email.read) {element.style.backgroundColor = 'lightgrey'}
 
   // Modifying element style
   const div = document.createElement('div');
@@ -284,27 +292,10 @@ async function mark_archive(email) {
 
 }
 
-function archive(email, btn) {
-  mark_archive(email)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Not Put');
-    }
-    if (email.archived) {
-      btn.innerHTML = 'Unarchive';
-    }
-    else {
-      btn.innerHTML = 'Archive';
-    }
-  })
-  .catch(error => alert(`${error}`));
-
-}
-
 function reply(email) {
   compose_email();
   document.querySelector('#compose-subject').value = `Re: ${email.subject}`;
-  document.querySelector('#compose-recipients').value = `${email.recipients}`;
+  document.querySelector('#compose-recipients').value = `${email.sender}`;
   document.querySelector('#compose-body').value = `\n ----------------- \n On ${email.timestamp} ${email.sender} wrote: \n ${email.body}`;
   // Bringing cursor on the body
   document.querySelector('#compose-body').focus();
