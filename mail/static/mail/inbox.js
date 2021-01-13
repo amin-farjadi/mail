@@ -311,7 +311,7 @@ function archive(email, btn) {
 function reply(email) {
   compose_email();
   document.querySelector('#compose-subject').value = `Re: ${email.subject}`;
-  document.querySelector('#compose-recipients').value = `${email.recipients}`;
+  document.querySelector('#compose-recipients').value = `${email.sender}`;
   document.querySelector('#compose-body').value = `\n ----------------- \n On ${email.timestamp} ${email.sender} wrote: \n ${email.body}`;
   // Bringing cursor on the body
   document.querySelector('#compose-body').focus();
